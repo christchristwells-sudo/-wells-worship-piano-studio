@@ -175,7 +175,7 @@ input[type=range]{width:100%;accent-color:var(--gold);margin:0}
   const $ = id => document.getElementById(id);
   let audio = null, master = null, reverbNode = null, dryGain = null, wetGain = null;
   let currentSound = "piano", octave = 0, sustain = false, metronomeOn = false, metronomeTimer = null;
-  let recording = false, recorded = [], activeNotes = new Map(), midiAccess = null, midiInputs = [];
+  let recording = false, recorded = [], activeNotes = new Map(), midiAccess = null, midiInputs = [], playbackTimers = [];
   let toastTimer = null;
   const soundNames = {piano:"Piano",soft:"Piano doux",pad:"Pad Worship",organ:"Orgue Gospel",strings:"Strings"};
   const activePage = () => document.querySelector(".page.active")?.id || "page-piano";
@@ -216,7 +216,7 @@ input[type=range]{width:100%;accent-color:var(--gold);margin:0}
     else if(currentSound==="organ"){addOsc("sine",1,.55);addOsc("sine",2,.28);addOsc("sine",3,.12);}
     else {addOsc("triangle",1,.42,-6);addOsc("triangle",1,.42,6);addOsc("sine",2,.13);}
     g.connect(dryGain||master); if(reverbNode)g.connect(reverbNode);
-    activeNotes.set(note,{g,osc,source,started:performance.now()});
+    activeNotes.set(note,{g,osc,source,started:performance.now(),release:(currentSound==="pad"||currentSound==="strings")?.45:.12});
     const key=document.querySelector(`[data-note="${note}"]`); if(key)key.classList.add("pressed");
     if(recording)recorded.push({note,velocity:Math.round(velocity*127),time:performance.now(),type:"on"});
   }
@@ -224,7 +224,7 @@ input[type=range]{width:100%;accent-color:var(--gold);margin:0}
     const item=activeNotes.get(note);if(!item|| (sustain&&!force))return;
     if(!audio)return;
     const now=audio.currentTime;
-    item.g.gain.cancelScheduledValues(now);item.g.gain.setTargetAtTime(.0001,now,currentSound==="pad"||currentSound==="strings"?.45:.12);
+    item.g.gain.cancelScheduledValues(now);item.g.gain.setTargetAtTime(.0001,now,item.release);
     item.osc.forEach(o=>{try{o.stop(now+1.8)}catch(e){}});
     activeNotes.delete(note);
     const key=document.querySelector(`[data-note="${note}"]`);if(key)key.classList.remove("pressed");
@@ -247,5 +247,4 @@ input[type=range]{width:100%;accent-color:var(--gold);margin:0}
     }
   }
   function bindKey(el,note){
-    const on=e=>{e.preventDefault();el.classList.add("pressed");startNote(note,.8)};
-    const off
+    const on=e=>{e.preventDefault();try{el.setPointerC
