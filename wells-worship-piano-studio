@@ -1,23 +1,338 @@
-name: Deploy Pages
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071426">
+<title>Wells Worship Piano Studio</title>
+<style>
+:root{--bg:#071426;--panel:#0d1d33;--line:#263b56;--gold:#e7bd62;--gold2:#ffe2a0;--text:#f7f5ef;--muted:#aab8cb;--green:#63d8a0;--red:#f07979;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+button,input{font:inherit}button{cursor:pointer;color:inherit}
+.app{max-width:920px;margin:auto;padding:14px 14px 96px}
+h1{font-size:15px;letter-spacing:1.2px;margin:4px 0 2px}
+.sub{font-size:11px;color:var(--gold);margin:0 0 14px}
+h2{font-size:13px;letter-spacing:1px;margin:14px 0 8px}
+.page{display:none}.page.active{display:block}
+.instruments{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px}
+.inst{min-width:100px;flex:1;border:1px solid var(--line);border-radius:14px;background:#0f2238;padding:10px 6px;text-align:center;font-size:11px;font-weight:700}
+.inst span{display:block;font-size:23px;margin-bottom:6px}
+.inst.active{border-color:var(--gold);color:var(--gold2);background:#1d3250}
+.panel{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:13px;margin-top:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex:none}.dot.ok{background:var(--green)}
+small,.note{font-size:11px;color:var(--muted);line-height:1.5}
+.transport{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}
+.ctl{border:1px solid var(--line);background:#122640;border-radius:12px;min-height:58px;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.ctl i{font-style:normal;font-size:18px;color:var(--gold)}
+.ctl.on{border-color:var(--gold);background:#2a2b2b}.ctl.rec.on{border-color:#f77;background:#2e1c24}.ctl.beat i{transform:scale(1.4)}
+.btn{border:1px solid var(--line);border-radius:10px;background:#142a44;padding:9px 12px;font-size:12px}
+.sm{width:36px;height:36px;border-radius:10px;border:1px solid #3a4d65;background:#152b45;color:var(--gold);font-size:18px}
+.sw{width:44px;height:24px;border-radius:20px;border:1px solid #4a5c72;background:#26374a;padding:3px;display:flex}
+.sw::after{content:"";width:16px;height:16px;border-radius:50%;background:#b5c0cc}
+.sw.on{background:#755a24;border-color:var(--gold);justify-content:flex-end}.sw.on::after{background:var(--gold2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.lbl{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px}.lbl b{color:var(--gold2);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--gold);margin:0}
+.keys{position:relative;display:flex;height:170px;margin-top:10px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.wk{flex:1;min-width:0;background:linear-gradient(#e9ebee,#fff 30%,#f1f1ec);border:1px solid #aeb5bf;border-radius:0 0 6px 6px;touch-action:none}
+.wk.p{background:linear-gradient(#ffe7a4,#e7bd62)}
+.bk{position:absolute;top:0;height:100px;width:4.2%;transform:translateX(-50%);background:linear-gradient(#05090f,#242f3f);border:1px solid #000;border-radius:0 0 5px 5px;z-index:2;touch-action:none}
+.bk.p{background:#ac843d}
+.last{margin-top:10px;border:1px dashed #35506c;border-radius:12px;padding:10px;font-size:12px;color:var(--gold2);min-height:38px}
+nav{position:fixed;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(3,1fr);background:#081426f2;border-top:1px solid #293c54;padding:6px 10px calc(6px + env(safe-area-inset-bottom));max-width:920px;margin:auto;z-index:10}
+nav button{border:0;background:none;color:#93a5bb;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button span{font-size:19px}nav button.active{color:var(--gold2)}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#f1d28c;color:#172237;padding:9px 14px;border-radius:11px;font-size:12px;font-weight:700;z-index:30;display:none;max-width:90%;text-align:center}
+.set{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #24374f;font-size:12px}.set:last-child{border:0}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>WELLS WORSHIP PIANO STUDIO</h1>
+<p class="sub">Jouez · Adorez · Élevez Sa présence</p>
 
-on:
-  push:
-    branches: [main]
+<section id="page-piano" class="page active">
+  <h2>INSTRUMENTS</h2>
+  <div class="instruments" id="insts">
+    <button class="inst" data-s="piano"><span>🎹</span>Piano</button>
+    <button class="inst" data-s="soft"><span>🎼</span>Piano doux</button>
+    <button class="inst" data-s="pad"><span>☁️</span>Pad Worship</button>
+    <button class="inst" data-s="organ"><span>🎛️</span>Orgue Gospel</button>
+    <button class="inst" data-s="strings"><span>🎻</span>Strings</button>
+  </div>
+  <div class="panel">
+    <div class="transport">
+      <button class="ctl" id="metro"><i>♩</i>Métronome</button>
+      <button class="ctl rec" id="rec"><i>⏺</i><span id="recL">Enregistrer</span></button>
+      <button class="ctl" id="play"><i>▶</i>Lecture</button>
+      <button class="ctl" id="stop"><i>■</i>Arrêt</button>
+    </div>
+    <div class="grid2">
+      <div><small>Octave</small><div class="row" style="justify-content:flex-start;margin-top:8px"><button class="sm" id="oDn">−</button><b id="oVal" style="min-width:26px;text-align:center">0</b><button class="sm" id="oUp">+</button></div></div>
+      <div><small>Sustain</small><div class="row" style="margin-top:8px"><span style="font-size:12px">Maintien</span><button class="sw" id="sus" aria-label="Sustain"></button></div></div>
+    </div>
+    <div class="grid2">
+      <label><div class="lbl"><span>Volume</span><b id="volV">70%</b></div><input id="vol" type="range" min="0" max="100"></label>
+      <label><div class="lbl"><span>Réverbération</span><b id="revV">25%</b></div><input id="rev" type="range" min="0" max="100"></label>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="row"><b style="font-size:12px">CLAVIER VIRTUEL</b><small id="nstat">Touchez une touche</small></div>
+    <div class="keys" id="keys"></div>
+    <p class="note">Le bas d’une touche joue plus fort que le haut. Les sons sont synthétiques (générés dans le navigateur).</p>
+  </div>
+</section>
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+<section id="page-midi" class="page">
+  <h2>MIDI / CLAVIER EXTERNE</h2>
+  <div class="panel">
+    <div class="row" style="justify-content:flex-start"><span class="dot" id="dot"></span><div><b style="font-size:12px">Web MIDI</b><br><small id="mst">Non vérifié</small></div></div>
+    <p class="note">Nécessite Chrome sur Android et un adaptateur USB OTG. La compatibilité avec ton Yamaha PSR-E463 n’est confirmée qu’après un essai réel.</p>
+    <button class="btn" id="mbtn">Rechercher les appareils MIDI</button>
+    <p class="note" id="mdev"></p>
+    <div class="last" id="mlast">Dernière note reçue : aucune</div>
+  </div>
+</section>
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - uses: actions/deploy-pages@v4
+<section id="page-set" class="page">
+  <h2>RÉGLAGES</h2>
+  <div class="panel">
+    <div class="set"><span>Tempo</span><span class="row"><input id="tempo" type="range" min="40" max="200" style="width:110px"><b id="tV" style="min-width:60px;text-align:right">80 BPM</b></span></div>
+    <div class="set"><span>Séquence enregistrée</span><b id="recInfo">Aucune</b></div>
+    <div class="set"><span>Export</span><button class="btn" id="exp">Exporter .mid</button></div>
+    <div class="set"><span>Réinitialiser</span><button class="btn" id="reset">Réinitialiser</button></div>
+  </div>
+  <p class="note">Version 0.6. L’export est un fichier MIDI (notes), pas un enregistrement audio.</p>
+</section>
+</div>
+
+<nav>
+  <button class="active" data-p="piano"><span>🎹</span>Piano</button>
+  <button data-p="midi"><span>⌁</span>MIDI</button>
+  <button data-p="set"><span>⚙</span>Réglages</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const KEY = "wwps-v06", DEF = {s:"piano", vol:70, rev:25, oct:0, tempo:80};
+const clamp = (v,a,b) => Math.min(b, Math.max(a,v));
+let cfg = {...DEF};
+try { const o = JSON.parse(localStorage.getItem(KEY)||"null"); if (o) { for (const k in DEF) if (typeof o[k] === typeof DEF[k]) cfg[k] = o[k]; } } catch(e){}
+if (!["piano","soft","pad","organ","strings"].includes(cfg.s)) cfg.s = "piano";
+cfg.vol = clamp(cfg.vol,0,100); cfg.rev = clamp(cfg.rev,0,100); cfg.oct = clamp(Math.round(cfg.oct),-2,2); cfg.tempo = clamp(Math.round(cfg.tempo),40,200);
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch(e){} };
+const NN = ["Do","Do♯","Ré","Ré♯","Mi","Fa","Fa♯","Sol","Sol♯","La","La♯","Si"];
+const nname = n => NN[n%12] + (Math.floor(n/12)-1);
+let tt; const toast = m => { const t=$("toast"); t.textContent=m; t.style.display="block"; clearTimeout(tt); tt=setTimeout(()=>t.style.display="none",2500); };
+
+/* ---- Audio ---- */
+const P = {
+  piano:  {t:"triangle", h:[[1,.7,0],[2,.25,0],[3,.1,0]], a:.005, d:2.2, s:.12, r:.4, lp:6000},
+  soft:   {t:"sine",     h:[[1,.8,0],[2,.15,0]],           a:.02,  d:3,   s:.2,  r:.6, lp:3500},
+  pad:    {t:"sawtooth", h:[[1,.4,-7],[1,.4,7],[.5,.3,0]], a:.8,   d:0,   s:1,   r:1.4,lp:1200},
+  organ:  {t:"sine",     h:[[1,.5,0],[2,.4,0],[3,.25,0],[4,.15,0]], a:.01, d:0, s:1, r:.08, lp:8000},
+  strings:{t:"sawtooth", h:[[1,.45,-8],[1,.45,8]],         a:.3,   d:0,   s:1,   r:.6, lp:2400}
+};
+let A, master, dry, wet, bus;
+function audio() {
+  if (A) { if (A.state === "suspended") A.resume(); return A; }
+  const C = window.AudioContext || window.webkitAudioContext;
+  if (!C) { toast("Audio non pris en charge"); return null; }
+  A = new C();
+  master = A.createGain();
+  const comp = A.createDynamicsCompressor();
+  master.connect(comp); comp.connect(A.destination);
+  bus = A.createGain(); dry = A.createGain(); wet = A.createGain();
+  const cv = A.createConvolver(), len = Math.floor(A.sampleRate*1.8), buf = A.createBuffer(2,len,A.sampleRate);
+  for (let c=0;c<2;c++){ const d=buf.getChannelData(c); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.8); }
+  cv.buffer = buf;
+  bus.connect(dry); dry.connect(master); bus.connect(cv); cv.connect(wet); wet.connect(master);
+  applyMix();
+  return A;
+}
+function applyMix() {
+  if (!A) return;
+  master.gain.value = cfg.vol/100*0.8;
+  wet.gain.value = cfg.rev/100;
+  dry.gain.value = 1 - cfg.rev/200;
+}
+const voices = new Map(), held = new Set();
+let sustainOn = false;
+function startVoice(n, vel) {
+  if (!audio()) return;
+  stopVoice(n, true);
+  const p = P[cfg.s], t = A.currentTime, v = vel/127*0.35, f = 440*Math.pow(2,(n-69)/12);
+  const g = A.createGain(), lp = A.createBiquadFilter(), oscs = [];
+  lp.type = "lowpass"; lp.frequency.value = p.lp;
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+p.a);
+  if (p.d) g.gain.setTargetAtTime(v*p.s, t+p.a, p.d/3);
+  p.h.forEach(([m,amp,det]) => {
+    const o = A.createOscillator(), og = A.createGain();
+    o.type = p.t; o.frequency.value = f*m; o.detune.value = det; og.gain.value = amp;
+    o.connect(og); og.connect(g); o.start(t); oscs.push(o);
+  });
+  g.connect(lp); lp.connect(bus);
+  voices.set(n, {g, oscs, r:p.r});
+}
+function stopVoice(n, quick) {
+  const x = voices.get(n); if (!x) return;
+  voices.delete(n);
+  const t = A.currentTime, r = quick ? .03 : x.r;
+  x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(x.g.gain.value, t); x.g.gain.setTargetAtTime(0, t, r/3);
+  x.oscs.forEach(o => { try { o.stop(t + r*2 + .1); } catch(e){} });
+}
+
+/* ---- Clavier ---- */
+const BASE = 60, keysEl = $("keys"), keyEls = {};
+for (let i=0;i<14;i++) {
+  const off = [0,2,4,5,7,9,11][i%7] + 12*Math.floor(i/7), el = document.createElement("div");
+  el.className = "wk"; el.dataset.n = BASE + off; keysEl.appendChild(el); keyEls[BASE+off] = el;
+  if ([0,1,3,4,5].includes(i%7) && i < 13) {
+    const b = document.createElement("div"), bn = BASE + off + 1;
+    b.className = "bk"; b.dataset.n = bn; b.style.left = ((i+1)/14*100) + "%"; keysEl.appendChild(b); keyEls[bn] = b;
+  }
+}
+const mark = (n,on) => { const e = keyEls[n]; if (e) e.classList.toggle("p", on); };
+const ptr = new Map();
+keysEl.addEventListener("pointerdown", e => {
+  const el = e.target.closest("[data-n]"); if (!el) return;
+  e.preventDefault();
+  try { keysEl.setPointerCapture(e.pointerId); } catch(_){}
+  const r = el.getBoundingClientRect(), vel = Math.round(clamp(55 + (e.clientY - r.top)/r.height*72, 40, 127));
+  const n = +el.dataset.n + cfg.oct*12;
+  ptr.set(e.pointerId, n); press(n, vel, "touch");
+});
+const rel = e => { const n = ptr.get(e.pointerId); if (n !== undefined) { ptr.delete(e.pointerId); unpress(n, "touch"); } };
+keysEl.addEventListener("pointerup", rel); keysEl.addEventListener("pointercancel", rel);
+
+/* ---- Jeu / enregistrement ---- */
+let recording = false, recStart = 0, seq = [], playTimers = [];
+function press(n, vel, src) {
+  n = clamp(n,0,127); startVoice(n, vel); mark(n - cfg.oct*12, true);
+  $("nstat").textContent = nname(n) + " · vel " + vel;
+  if (recording && src !== "play") seq.push({t: performance.now()-recStart, on:1, n, v:vel});
+}
+function unpress(n, src) {
+  n = clamp(n,0,127); mark(n - cfg.oct*12, false);
+  if (recording && src !== "play") seq.push({t: performance.now()-recStart, on:0, n, v:0});
+  if (sustainOn) held.add(n); else stopVoice(n);
+}
+function setSustain(on) {
+  sustainOn = on; $("sus").classList.toggle("on", on);
+  if (!on) { held.forEach(n => stopVoice(n)); held.clear(); }
+}
+$("sus").onclick = () => setSustain(!sustainOn);
+
+/* ---- Interface ---- */
+function syncUI() {
+  document.querySelectorAll(".inst").forEach(b => b.classList.toggle("active", b.dataset.s === cfg.s));
+  $("vol").value = cfg.vol; $("volV").textContent = cfg.vol + "%";
+  $("rev").value = cfg.rev; $("revV").textContent = cfg.rev + "%";
+  $("oVal").textContent = cfg.oct;
+  $("tempo").value = cfg.tempo; $("tV").textContent = cfg.tempo + " BPM";
+  $("recInfo").textContent = seq.length ? Math.ceil(seq.filter(x=>x.on).length) + " notes" : "Aucune";
+}
+document.querySelectorAll(".inst").forEach(b => b.onclick = () => {
+  cfg.s = b.dataset.s; save(); syncUI(); startVoice(60,100); setTimeout(() => stopVoice(60), 500);
+});
+$("vol").oninput = e => { cfg.vol = +e.target.value; applyMix(); save(); syncUI(); };
+$("rev").oninput = e => { cfg.rev = +e.target.value; applyMix(); save(); syncUI(); };
+$("oDn").onclick = () => { cfg.oct = clamp(cfg.oct-1,-2,2); save(); syncUI(); };
+$("oUp").onclick = () => { cfg.oct = clamp(cfg.oct+1,-2,2); save(); syncUI(); };
+$("tempo").oninput = e => { cfg.tempo = +e.target.value; save(); syncUI(); if (metroTimer) startMetro(); };
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("active", x === b));
+  document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === "page-" + b.dataset.p));
+});
+$("reset").onclick = () => { cfg = {...DEF}; save(); applyMix(); syncUI(); toast("Réglages réinitialisés"); };
+
+/* ---- Métronome ---- */
+let metroTimer = null;
+function click() {
+  if (!audio()) return;
+  const t = A.currentTime, o = A.createOscillator(), g = A.createGain();
+  o.frequency.value = 1000; g.gain.setValueAtTime(.25,t); g.gain.exponentialRampToValueAtTime(.001,t+.05);
+  o.connect(g); g.connect(A.destination); o.start(t); o.stop(t+.06);
+  $("metro").classList.add("beat"); setTimeout(() => $("metro").classList.remove("beat"), 80);
+}
+function startMetro() { clearInterval(metroTimer); click(); metroTimer = setInterval(click, 60000/cfg.tempo); $("metro").classList.add("on"); }
+$("metro").onclick = () => {
+  if (metroTimer) { clearInterval(metroTimer); metroTimer = null; $("metro").classList.remove("on"); } else startMetro();
+};
+
+/* ---- Enregistrer / Lecture / Arrêt ---- */
+$("rec").onclick = () => {
+  if (!recording) {
+    stopPlay(); seq = []; recording = true; recStart = performance.now();
+    $("rec").classList.add("on"); $("recL").textContent = "Arrêter"; toast("Enregistrement…");
+  } else endRec();
+};
+function endRec() {
+  if (!recording) return;
+  recording = false; $("rec").classList.remove("on"); $("recL").textContent = "Enregistrer";
+  syncUI(); toast(seq.length ? "Séquence enregistrée" : "Rien enregistré");
+}
+function stopPlay() {
+  playTimers.forEach(clearTimeout); playTimers = []; $("play").classList.remove("on");
+  voices.forEach((_,n) => stopVoice(n)); document.querySelectorAll(".p").forEach(e => e.classList.remove("p"));
+}
+$("play").onclick = () => {
+  endRec();
+  if (!seq.length) return toast("Aucune séquence");
+  stopPlay(); $("play").classList.add("on");
+  seq.forEach(ev => playTimers.push(setTimeout(() => ev.on ? press(ev.n, ev.v, "play") : unpress(ev.n, "play"), ev.t)));
+  playTimers.push(setTimeout(stopPlay, seq[seq.length-1].t + 800));
+};
+$("stop").onclick = () => { endRec(); stopPlay(); setSustain(false); };
+
+/* ---- Export MIDI ---- */
+function vlq(v) { const b = [v & 127]; while ((v >>= 7)) b.unshift((v & 127) | 128); return b; }
+$("exp").onclick = () => {
+  if (!seq.length) return toast("Aucune séquence à exporter");
+  const PPQ = 480, us = Math.round(60000000/cfg.tempo), tr = [0,0xFF,0x51,3,(us>>16)&255,(us>>8)&255,us&255];
+  let last = 0;
+  seq.forEach(ev => {
+    const tick = Math.round(ev.t/1000*(cfg.tempo/60)*PPQ);
+    tr.push(...vlq(Math.max(0, tick-last)), ev.on ? 0x90 : 0x80, ev.n, ev.on ? ev.v : 0); last = tick;
+  });
+  tr.push(0,0xFF,0x2F,0);
+  const len = tr.length;
+  const bytes = [77,84,104,100,0,0,0,6,0,0,0,1,PPQ>>8,PPQ&255,77,84,114,107,(len>>24)&255,(len>>16)&255,(len>>8)&255,len&255,...tr];
+  const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], {type:"audio/midi"}));
+  const a = document.createElement("a"); a.href = url; a.download = "wells-studio.mid";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+};
+
+/* ---- MIDI USB ---- */
+function onMsg(m) {
+  const [st, d1, d2] = m.data, cmd = st & 240;
+  if (cmd === 0x90 && d2 > 0) { press(d1, d2, "midi"); $("mlast").textContent = "Dernière note : " + nname(d1) + " (vel " + d2 + ")"; }
+  else if (cmd === 0x80 || cmd === 0x90) unpress(d1, "midi");
+  else if (cmd === 0xB0 && d1 === 64) setSustain(d2 >= 64);
+}
+async function midiInit() {
+  if (!navigator.requestMIDIAccess) { $("mst").textContent = "Web MIDI non pris en charge"; return toast("Utilise Chrome sur Android"); }
+  try {
+    const acc = await navigator.requestMIDIAccess();
+    const scan = () => {
+      const ins = [...acc.inputs.values()];
+      ins.forEach(i => i.onmidimessage = onMsg);
+      $("dot").classList.toggle("ok", ins.length > 0);
+      $("mst").textContent = ins.length ? "Connecté" : "Aucun appareil détecté";
+      $("mdev").textContent = ins.length ? ins.map(i => i.name).join(", ") : "";
+    };
+    acc.onstatechange = scan; scan();
+  } catch(e) { $("mst").textContent = "Accès refusé"; toast("Accès MIDI refusé"); }
+}
+$("mbtn").onclick = midiInit;
+
+syncUI();
+})();
+</script>
+</body>
+</html>
